@@ -1,0 +1,23 @@
+{
+  "name": "web-gobang",
+  "version": "1.0.0",
+  "description": "在线五子棋双人对战系统",
+  "main": "index.js",
+  "scripts": {
+    "server": "cd server && node src/server.js",
+    "client": "cd client && npm run dev",
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build",
+    "docker:build": "docker build -t gobang-app .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": ["gobang", "five-in-a-row", "websocket", "react"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
