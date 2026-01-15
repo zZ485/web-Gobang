@@ -1,55 +1,67 @@
-# 阶段1: 构建前端
+# Stage 1: Build frontend
 FROM node:18-alpine AS client-build
 
 WORKDIR /app/client
 
-# 复制前端依赖文件
+# Copy package files
 COPY client/package*.json ./
 
-# 安装依赖
-RUN npm ci --only=production
+# Install dependencies (including devDependencies for build)
+RUN npm ci
 
-# 复制前端源代码
+# Copy source code
 COPY client/ ./
 
-# 构建前端
+# Build frontend
 RUN npm run build
 
-# 阶段2: 构建后端镜像
-FROM node:18-alpine
+# Stage 2: Backend
+FROM node:18-alpine AS backend
 
 WORKDIR /app
 
-# 安装 dumb-init 用于信号传递
+# Install dumb-init for signal handling
 RUN apk add --no-cache dumb-init
 
-# 复制后端依赖文件
+# Copy backend dependencies
 COPY server/package*.json ./server/
 
-# 安装后端依赖
+# Install backend dependencies
 WORKDIR /app/server
 RUN npm ci --only=production
 
-# 复制后端源代码
+# Copy backend source code
 COPY server/ ./
 
-# 从前端构建阶段复制构建产物
-COPY --from=client-build /app/client/dist /app/client/dist
-
-# 创建非root用户
+# Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
     chown -R nodejs:nodejs /app
 
 USER nodejs
 
-# 暴露端口
+# Expose port
 EXPOSE 3001
 
-# 设置环境变量
+# Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3001
 
-# 使用 dumb-init 启动应用
+# Use dumb-init to start app
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "src/server.js"]
+
+# Stage 3: Frontend nginx
+FROM nginx:alpine AS frontend
+
+# Copy built frontend from build stage
+COPY --from=client-build /app/client/dist /usr/share/nginx/html
+
+# Copy nginx configuration
+COPY nginx/frontend.conf /etc/nginx/conf.d/default.conf
+
+# Expose port
+EXPOSE 3000
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

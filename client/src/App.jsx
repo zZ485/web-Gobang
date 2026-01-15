@@ -28,7 +28,7 @@ function App() {
     console.log('=== 初始化 Socket ===');
     
     // 创建Socket实例
-    const socket = io('http://localhost:3001', {
+    const socket = io('/', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,

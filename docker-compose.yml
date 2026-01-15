@@ -1,11 +1,24 @@
 version: '3.8'
 
 services:
-  gobang-server:
+  gobang-frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: gobang-app
+      target: frontend
+    container_name: gobang-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gobang-backend
+    restart: unless-stopped
+
+  gobang-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    container_name: gobang-backend
     ports:
       - "3001:3001"
     environment:
