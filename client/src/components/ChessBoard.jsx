@@ -1,9 +1,39 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function ChessBoard({ board, lastMove, onMove, disabled }) {
   const canvasRef = useRef(null);
-  const cellSize = 40;
-  const padding = 30;
+  const [cellSize, setCellSize] = useState(40);
+  const [padding, setPadding] = useState(30);
+
+  // 响应式调整棋盘大小
+  useEffect(() => {
+    const updateBoardSize = () => {
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+
+      // 计算可用空间（保留一些边距）
+      const availableWidth = screenWidth - 32; // 左右各 16px padding
+      const availableHeight = screenHeight - 250; // 顶部标题、消息等约 150px + 底部约 100px
+
+      // 计算合适的格子大小
+      const newCellSize = Math.min(
+        Math.floor(availableWidth / 14),  // 14 个格子
+        Math.floor(availableHeight / 14)
+      );
+
+      // 确保最小格子大小为 20px，最大为 40px
+      const finalCellSize = Math.max(20, Math.min(40, newCellSize));
+      const finalPadding = Math.max(15, Math.floor(finalCellSize * 0.75));
+
+      setCellSize(finalCellSize);
+      setPadding(finalPadding);
+    };
+
+    updateBoardSize();
+    window.addEventListener('resize', updateBoardSize);
+
+    return () => window.removeEventListener('resize', updateBoardSize);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -98,15 +128,17 @@ function ChessBoard({ board, lastMove, onMove, disabled }) {
       ctx.lineTo(x, y + 5);
       ctx.stroke();
     }
-  }, [board, lastMove]);
+  }, [board, lastMove, cellSize, padding]);
 
   const handleClick = (e) => {
     if (disabled) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
     const col = Math.round((x - padding) / cellSize);
     const row = Math.round((y - padding) / cellSize);
@@ -123,13 +155,14 @@ function ChessBoard({ board, lastMove, onMove, disabled }) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative max-w-full">
       <canvas
         ref={canvasRef}
         width={padding * 2 + 14 * cellSize}
         height={padding * 2 + 14 * cellSize}
         onClick={handleClick}
-        className={`board-shadow rounded-lg cursor-pointer ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
+        className={`board-shadow rounded-lg cursor-pointer max-w-full h-auto ${disabled ? 'cursor-not-allowed opacity-70' : ''}`}
+        style={{ touchAction: 'none' }}
       />
     </div>
   );

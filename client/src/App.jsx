@@ -26,9 +26,16 @@ function App() {
 
   useEffect(() => {
     console.log('=== 初始化 Socket ===');
-    
+
+    // 根据环境选择 Socket 连接 URL
+    const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const socketUrl = isDevelopment ? 'http://localhost:3001' : '/';
+
+    console.log('Socket连接URL:', socketUrl);
+    console.log('当前环境:', isDevelopment ? '开发环境' : '生产环境');
+
     // 创建Socket实例
-    const socket = io('/', {
+    const socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
@@ -245,29 +252,29 @@ function App() {
   }
 
   return (
-    <div className="h-screen w-full bg-primary-bg flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-primary-bg flex flex-col items-center justify-start p-4 overflow-x-hidden">
       {/* 标题 */}
-      <h1 className="text-4xl font-bold text-text-primary mb-4">五子棋</h1>
+      <h1 className="text-3xl md:text-4xl font-bold text-text-primary mb-3 md:mb-4 mt-2">五子棋</h1>
 
       {/* 游戏消息 */}
       {gameMessage && (
-        <div className="mb-4 px-6 py-2 bg-white rounded-lg shadow-md text-text-primary font-medium">
+        <div className="mb-3 md:mb-4 px-4 md:px-6 py-2 bg-white rounded-lg shadow-md text-text-primary font-medium text-sm md:text-base">
           {gameMessage}
         </div>
       )}
 
       {/* 等待提示 */}
       {waiting && (
-        <div className="mb-4 px-6 py-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700">
+        <div className="mb-3 md:mb-4 px-4 md:px-6 py-2 md:py-3 bg-yellow-50 border border-yellow-200 rounded-lg text-yellow-700 text-sm md:text-base">
           等待另一个玩家加入...
         </div>
       )}
 
       {/* 主游戏区域 */}
-      <div className="flex flex-col lg:flex-row gap-6 items-center">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-center justify-center w-full max-w-4xl">
         {/* 左侧玩家信息 */}
         {gameState.players.length > 0 && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2 md:gap-4 order-2 md:order-1">
             {gameState.players.map(p => (
               <PlayerInfo
                 key={p.id}
@@ -281,15 +288,17 @@ function App() {
         )}
 
         {/* 棋盘 */}
-        <ChessBoard
-          board={gameState.board}
-          lastMove={gameState.lastMove}
-          onMove={handleMakeMove}
-          disabled={waiting || gameState.gameOver || !isMyTurn}
-        />
+        <div className="order-1 md:order-2">
+          <ChessBoard
+            board={gameState.board}
+            lastMove={gameState.lastMove}
+            onMove={handleMakeMove}
+            disabled={waiting || gameState.gameOver || !isMyTurn}
+          />
+        </div>
 
         {/* 右侧控制面板 */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 md:gap-4 order-3">
           <ScoreBoard scores={gameState.scores} />
           <ControlPanel
             onUndo={handleUndo}
@@ -303,7 +312,7 @@ function App() {
       </div>
 
       {/* 底部状态 */}
-      <div className="mt-6 text-text-secondary text-sm">
+      <div className="mt-4 md:mt-6 text-text-secondary text-xs md:text-sm">
         {gameState.isPlaying && !gameState.gameOver && (
           <span>
             {isMyTurn ? '轮到你落子' : '等待对方落子'}

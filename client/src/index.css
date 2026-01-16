@@ -15,7 +15,7 @@ body {
 #root {
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 .board-shadow {
@@ -24,4 +24,11 @@ body {
 
 .piece-shadow {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* 移动端优化 */
+@media (max-width: 640px) {
+  #root {
+    overflow-y: auto;
+  }
 }
